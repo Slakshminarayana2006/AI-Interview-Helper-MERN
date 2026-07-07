@@ -14,7 +14,10 @@ connectDB();
 
 
 app.use(cors({
-    origin : "http://localhost:5173",
+    origin : [
+        "http://localhost:5173",
+        "https://ai-interview-helper-mern.vercel.app"
+    ],
     credentials : true
 }));
 app.use(cookieParser());
@@ -29,7 +32,7 @@ app.get('/', (req, res) => {
 })
 
 
-const PORT = 4000 || process.env.PORT;
+const PORT = process.env.PORT || 4000;
 app.listen(PORT, () => {
     console.log(`Express Server Running at : ${PORT} ✔`);
 });
