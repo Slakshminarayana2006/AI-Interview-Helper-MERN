@@ -13,7 +13,7 @@ const registerController = async (req, res) => {
             });
         }
 
-        const existedUser = userModel.findOne({email});
+        const existedUser = await userModel.findOne({email});
         if(!existedUser) {
             return res.status(400).json({
                 success : false,
@@ -127,7 +127,11 @@ const loginController = async(req, res) => {
             })
         }
 
-        return res.status(200).cookie("token", token).json({
+        return res.status(200).cookie("token", token, {
+    httpOnly: true,
+    secure: true,
+    sameSite: "none",
+}).json({
             success : true,
             message : "Login Success",
             user : loginedUser
