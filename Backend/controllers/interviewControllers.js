@@ -145,69 +145,93 @@ const getAllReportsOfAUser = async (req, res) => {
     }
 }
 
+
 const getResumePdf = async (req, res) => {
-    const {interviewId} = req.params;
-    if(!interviewId) {
-        return res.status(400).json({
-            success : false,
-            message : "report not found"
-        })
-    }
-
-    const generatedReport = await interViewSchema.findById(interviewId).select("resume jobDescription selfDescription");
-
-    if(!generatedReport) {
-        return res.status(400).json({
-            success : false,
-            message : "report not found"
-        })
-    }
-
-    const htmlText = await generateResumePdf(generatedReport);
-    if(!htmlText) {
-        return res.status(400).json({
-            message : "internal error",
-            success : false
-        })
-    }
-
-    let browser;
-
     try {
-        browser = await puppeteer.launch({
-            executablePath:
-                process.env.NODE_ENV === "production"
-                    ? undefined
-                    : "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe",
-            headless: true,
-            args: ["--no-sandbox", "--disable-setuid-sandbox"],
-        });
+        const { interviewId } = req.params;
 
-        const page = await browser.newPage();
+        if (!interviewId) {
+            return res.status(400).json({
+                success: false,
+                message: "Report not found"
+            });
+        }
 
-        await page.setContent(htmlText.html, {
-            waitUntil: "networkidle0",
-        });
+        const generatedReport = await interViewSchema
+            .findById(interviewId)
+            .select("resume jobDescription selfDescription");
 
-        const pdf = await page.pdf({
-            format: "A4",
-            printBackground: true,
-            
-        });
+        if (!generatedReport) {
+            return res.status(404).json({
+                success: false,
+                message: "Report not found"
+            });
+        }
 
-        res.set({
-            "Content-Type": "application/pdf",
-            "Content-Disposition": "attachment; filename=report.pdf",
-        });
+        const htmlText = await generateResumePdf(generatedReport);
 
-        return res.send(pdf);
+        if (!htmlText?.html) {
+            return res.status(500).json({
+                success: false,
+                message: "Failed to generate resume HTML"
+            });
+        }
 
-    } finally {
-        if (browser) {
-            await browser.close();
+        let browser;
+
+        try {
+            const launchOptions = {
+                headless: true,
+                args: [
+                    "--no-sandbox",
+                    "--disable-setuid-sandbox"
+                ]
+            };
+
+            if (process.env.NODE_ENV !== "production") {
+                launchOptions.executablePath =
+                    "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe";
+            }
+
+            browser = await puppeteer.launch(launchOptions);
+
+            const page = await browser.newPage();
+
+            await page.setContent(htmlText.html, {
+                waitUntil: "networkidle0"
+            });
+
+            const pdf = await page.pdf({
+                format: "A4",
+                printBackground: true
+            });
+
+            res.set({
+                "Content-Type": "application/pdf",
+                "Content-Disposition":
+                    'attachment; filename="report.pdf"'
+            });
+
+            return res.send(pdf);
+
+        } finally {
+            if (browser) {
+                await browser.close();
+            }
+        }
+
+    } catch (error) {
+        console.error("Resume PDF generation error:", error);
+
+        if (!res.headersSent) {
+            return res.status(500).json({
+                success: false,
+                message: "Failed to generate resume PDF"
+            });
         }
     }
-}
+};
+
 
 module.exports = {
     getResumeAndDescription,
