@@ -7,17 +7,19 @@ function Analyze() {
   const navigate = useNavigate();
   const [tab, setTab] = useState("technical");
   const {loading, setLoading, report, setReport, allReports, setAllreports, handleGenerateReport, handleGetReportById, handleGetAllReportsOfAUser, handleDownload} = useAi(); 
-  const handleDownloadPdf = async () => {
+  
+const handleDownloadPdf = async () => {
     try {
-      setLoading(true);
-      await handleDownload(report._id);
-      setLoading(false);
-      alert("Downloading......");
+        setLoading(true);
+        await handleDownload(report._id);
     } catch (error) {
-      console.log(error.message);
-      throw error;
+        console.error("Download failed:", error);
+        alert("Failed to download PDF. Check the console and server logs.");
+    } finally {
+        setLoading(false);
     }
-  }
+};
+
 
   if(loading) {
     return(
