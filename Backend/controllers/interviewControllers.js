@@ -193,6 +193,10 @@ const getResumePdf = async (req, res) => {
                     "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe";
             }
 
+            console.log("NODE_ENV:", process.env.NODE_ENV);
+console.log("Puppeteer cache:", puppeteer.defaultDownloadPath);
+console.log("Chrome executable:", puppeteer.executablePath());
+
             browser = await puppeteer.launch(launchOptions);
 
             const page = await browser.newPage();
