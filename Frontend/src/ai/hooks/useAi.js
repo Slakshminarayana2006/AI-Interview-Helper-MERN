@@ -45,18 +45,29 @@ const useAi = () => {
             setLoading(false);
         }
     }
-    const handleDownload = async (interviewId) => {
-        const response = await getDownloadedPdf(interviewId);
+    
+const handleDownload = async (interviewId) => {
+    const response = await getDownloadedPdf(interviewId);
 
-        const url = URL.createObjectURL(response);
+    if (!(response instanceof Blob) || response.size === 0) {
+        throw new Error("Invalid or empty PDF received from server");
+    }
 
+    const url = URL.createObjectURL(response);
+
+    try {
         const a = document.createElement("a");
         a.href = url;
         a.download = "Resume.pdf";
-        a.click();
 
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+    } finally {
         URL.revokeObjectURL(url);
-    };
+    }
+};
+
 
     return {loading, setLoading, report, setReport, allReports, setAllReports, handleGenerateReport, handleGetReportById, handleGetAllReportsOfAUser, handleDownload}
 }
