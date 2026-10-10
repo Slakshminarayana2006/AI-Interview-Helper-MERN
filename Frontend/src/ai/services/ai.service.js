@@ -44,18 +44,32 @@ const getAllReportsOfAUser = async() => {
     }
 }
 
+
 const getDownloadedPdf = async (interviewId) => {
     try {
-        const response = await api.get(`/api/interview/getresume/${interviewId}`, {
-            responseType: "blob",
-            withCredentials: true,
-    });
+        const response = await api.get(
+            `/api/interview/getresume/${interviewId}`,
+            {
+                responseType: "blob"
+            }
+        );
+
         return response.data;
-        
     } catch (error) {
-        console.log(error.message);
+        console.error("PDF API status:", error.response?.status);
+
+        if (error.response?.data instanceof Blob) {
+            console.error(
+                "PDF API error details:",
+                await error.response.data.text()
+            );
+        } else {
+            console.error("PDF API error:", error.message);
+        }
+
+        throw error;
     }
-}
+};
 
 export {
     generateInterviewReport,
